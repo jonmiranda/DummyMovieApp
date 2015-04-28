@@ -1,8 +1,11 @@
 package net.jonmiranda.dummymovieapp;
 
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -59,8 +62,14 @@ public class MainActivity extends AppCompatActivity {
             movieImages[i] = getResources().getDrawable(MOVIE_IMAGE_IDS[i]);
         }
 
+        final Palette[] palletes = new Palette[MOVIE_IMAGE_IDS.length];
+        for (int i = 0; i < MOVIE_IMAGE_IDS.length; ++i) {
+            palletes[i] = Palette.generate(BitmapFactory.decodeResource(getResources(), MOVIE_IMAGE_IDS[i]));
+        }
+
         // set up adapter
-        RecyclerView.Adapter<MovieItemViewHolder> adapter = new MovieListAdapter(MOVIE_NAMES, movieImages);
+        RecyclerView.Adapter<MovieItemViewHolder> adapter =
+                new MovieListAdapter(MOVIE_NAMES, movieImages, palletes);
         mRecyclerView.setAdapter(adapter);
     }
 
@@ -68,10 +77,12 @@ public class MainActivity extends AppCompatActivity {
 
         private final String[] titles;
         private final Drawable[] images;
+        private final Palette[] palettes;
 
-        public MovieListAdapter(String[] titles, Drawable[] images) {
+        public MovieListAdapter(String[] titles, Drawable[] images, Palette[] palettes) {
             this.titles = titles;
             this.images = images;
+            this.palettes = palettes;
         }
 
         @Override
@@ -83,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(MovieItemViewHolder holder, int position) {
+            holder.cardView.setBackgroundColor(palettes[position].getVibrantColor(Color.WHITE));
             holder.movieTitle.setText(titles[position]);
             holder.movieImage.setImageDrawable(images[position]);
         }
@@ -94,11 +106,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     static class MovieItemViewHolder extends RecyclerView.ViewHolder {
+        protected View cardView;
         protected TextView movieTitle;
         protected ImageView movieImage;
 
         public MovieItemViewHolder(View view) {
             super(view);
+            cardView = view;
             movieTitle = (TextView) view.findViewById(R.id.movie_title);
             movieImage = (ImageView) view.findViewById(R.id.movie_image);
         }
