@@ -56,20 +56,18 @@ public class MainActivity extends AppCompatActivity {
         llm.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(llm);
 
-        // build list of images
+        // build list of images and palettes
         final Drawable[] movieImages = new Drawable[MOVIE_IMAGE_IDS.length];
+        final Palette[] palettes = new Palette[MOVIE_IMAGE_IDS.length];
+
         for (int i = 0; i < MOVIE_IMAGE_IDS.length; ++i) {
             movieImages[i] = getResources().getDrawable(MOVIE_IMAGE_IDS[i]);
-        }
-
-        final Palette[] palletes = new Palette[MOVIE_IMAGE_IDS.length];
-        for (int i = 0; i < MOVIE_IMAGE_IDS.length; ++i) {
-            palletes[i] = Palette.generate(BitmapFactory.decodeResource(getResources(), MOVIE_IMAGE_IDS[i]));
+            palettes[i] = Palette.generate(BitmapFactory.decodeResource(getResources(), MOVIE_IMAGE_IDS[i]));
         }
 
         // set up adapter
         RecyclerView.Adapter<MovieItemViewHolder> adapter =
-                new MovieListAdapter(MOVIE_NAMES, movieImages, palletes);
+                new MovieListAdapter(MOVIE_NAMES, movieImages, palettes);
         mRecyclerView.setAdapter(adapter);
     }
 
