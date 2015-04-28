@@ -1,5 +1,7 @@
 package net.jonmiranda.dummymovieapp;
 
+import android.app.ActivityOptions;
+import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -67,17 +69,19 @@ public class MainActivity extends AppCompatActivity {
 
         // set up adapter
         RecyclerView.Adapter<MovieItemViewHolder> adapter =
-                new MovieListAdapter(MOVIE_NAMES, movieImages, palettes);
+                new MovieListAdapter(this, MOVIE_NAMES, movieImages, palettes);
         mRecyclerView.setAdapter(adapter);
     }
 
     static class MovieListAdapter extends RecyclerView.Adapter<MovieItemViewHolder> {
 
+        private final MainActivity activity;
         private final String[] titles;
         private final Drawable[] images;
         private final Palette[] palettes;
 
-        public MovieListAdapter(String[] titles, Drawable[] images, Palette[] palettes) {
+        public MovieListAdapter(MainActivity activity, String[] titles, Drawable[] images, Palette[] palettes) {
+            this.activity = activity;
             this.titles = titles;
             this.images = images;
             this.palettes = palettes;
@@ -91,10 +95,28 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onBindViewHolder(MovieItemViewHolder holder, int position) {
+        public void onBindViewHolder(final MovieItemViewHolder holder, final int position) {
             holder.cardView.setBackgroundColor(palettes[position].getVibrantColor(Color.WHITE));
             holder.movieTitle.setText(titles[position]);
             holder.movieImage.setImageDrawable(images[position]);
+
+            holder.cardView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // WARNING: Below only works on API 21+
+
+                    // create the transition animation - the views in the layouts
+                    // of both activities are defined with android:transitionName="movie_title"
+                    ActivityOptions options = ActivityOptions
+                            .makeSceneTransitionAnimation(activity, holder.movieTitle, "movie_title");
+
+                    Intent intent = new Intent(activity, MovieActivity.class);
+                    intent.putExtra(MovieActivity.MOVIE_TITLE_KEY, titles[position]);
+
+                    // start the new activity
+                    activity.startActivity(intent, options.toBundle());
+                }
+            });
         }
 
         @Override
