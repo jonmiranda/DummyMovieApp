@@ -53,11 +53,13 @@ public class MainActivity extends AppCompatActivity {
         llm.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(llm);
 
-        // set up adapter
+        // build list of images
         final Drawable[] movieImages = new Drawable[MOVIE_IMAGE_IDS.length];
         for (int i = 0; i < MOVIE_IMAGE_IDS.length; ++i) {
             movieImages[i] = getResources().getDrawable(MOVIE_IMAGE_IDS[i]);
         }
+
+        // set up adapter
         RecyclerView.Adapter<MovieItemViewHolder> adapter = new MovieListAdapter(MOVIE_NAMES, movieImages);
         mRecyclerView.setAdapter(adapter);
     }
