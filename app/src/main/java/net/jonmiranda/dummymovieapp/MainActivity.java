@@ -16,6 +16,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.squareup.picasso.Picasso;
+
 import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
@@ -99,6 +101,10 @@ public class MainActivity extends AppCompatActivity {
         public void onBindViewHolder(final MovieItemViewHolder holder, final int position) {
             holder.cardView.setBackgroundColor(movies[position].color);
             holder.movieTitle.setText(movies[position].title);
+
+            // Picasso will handle making the network request, retrieving the image data, and
+            // putting the image into the View
+            Picasso.with(activity).load(movies[position].imgLink).into(holder.movieImage);
 
             holder.cardView.setOnClickListener(new View.OnClickListener() {
                 @Override
