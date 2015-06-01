@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -82,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
             movies = realm.copyToRealm(Arrays.asList(movieArray));
             realm.commitTransaction();
         } else {
+            Log.e("MainActivity", "realm.where(Movie.class).count() != 0");
             movies = realm.where(Movie.class).findAll();
         }
 
@@ -113,7 +115,20 @@ public class MainActivity extends AppCompatActivity {
             holder.cardView.setBackgroundColor(movie.getColor());
             holder.movieTitle.setText(movie.getTitle());
             holder.movieImage.setImageDrawable(activity.getResources().getDrawable(movie.getImgId()));
-
+            holder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    Realm realm = Realm.getInstance(activity);
+                    realm.beginTransaction();
+                    // Because "movie" is a live object from the database, we need to wrap
+                    // it in a realm transaction. Any modifications done to the object will be
+                    // updated to the database at the same time.
+                    movie.setColor(Color.GRAY);
+                    realm.commitTransaction();
+                    notifyDataSetChanged();
+                    return true;
+                }
+            });
             holder.cardView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
