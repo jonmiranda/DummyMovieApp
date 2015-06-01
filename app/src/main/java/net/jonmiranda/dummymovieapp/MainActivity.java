@@ -4,7 +4,6 @@ import android.app.ActivityOptions;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
@@ -17,6 +16,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import java.util.Arrays;
+import java.util.List;
+
+import io.realm.Realm;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -58,33 +62,42 @@ public class MainActivity extends AppCompatActivity {
         llm.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(llm);
 
-        // build list of images and palettes
-        final Drawable[] movieImages = new Drawable[MOVIE_IMAGE_IDS.length];
-        final Palette[] palettes = new Palette[MOVIE_IMAGE_IDS.length];
 
-        for (int i = 0; i < MOVIE_IMAGE_IDS.length; ++i) {
-            movieImages[i] = getResources().getDrawable(MOVIE_IMAGE_IDS[i]);
-            palettes[i] = Palette.generate(BitmapFactory.decodeResource(getResources(), MOVIE_IMAGE_IDS[i]));
+        List<Movie> movies;  // this will hold live references to the objects in the database
+
+        Realm realm = Realm.getInstance(this);
+        if (realm.where(Movie.class).count() == 0) {
+            // database is empty, so let's fill it up with data!
+            final Movie[] movieArray = new Movie[MOVIE_NAMES.length];
+            for (int i = 0; i < movieArray.length; ++i) {
+                Movie movie = new Movie();
+                movie.setTitle(MOVIE_NAMES[i]);
+                movie.setImgId(MOVIE_IMAGE_IDS[i]);
+                movie.setColor(Palette.generate(BitmapFactory.decodeResource(getResources(),
+                        MOVIE_IMAGE_IDS[i])).getVibrantColor(Color.WHITE));
+                movieArray[i] = movie;
+            }
+
+            realm.beginTransaction();
+            movies = realm.copyToRealm(Arrays.asList(movieArray));
+            realm.commitTransaction();
+        } else {
+            movies = realm.where(Movie.class).findAll();
         }
 
         // set up adapter
-        RecyclerView.Adapter<MovieItemViewHolder> adapter =
-                new MovieListAdapter(this, MOVIE_NAMES, movieImages, palettes);
+        RecyclerView.Adapter<MovieItemViewHolder> adapter = new MovieListAdapter(this, movies);
         mRecyclerView.setAdapter(adapter);
     }
 
     static class MovieListAdapter extends RecyclerView.Adapter<MovieItemViewHolder> {
 
         private final MainActivity activity;
-        private final String[] titles;
-        private final Drawable[] images;
-        private final Palette[] palettes;
+        private final List<Movie> movies;
 
-        public MovieListAdapter(MainActivity activity, String[] titles, Drawable[] images, Palette[] palettes) {
+        public MovieListAdapter(MainActivity activity, List<Movie> movies) {
             this.activity = activity;
-            this.titles = titles;
-            this.images = images;
-            this.palettes = palettes;
+            this.movies = movies;
         }
 
         @Override
@@ -96,9 +109,10 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(final MovieItemViewHolder holder, final int position) {
-            holder.cardView.setBackgroundColor(palettes[position].getVibrantColor(Color.WHITE));
-            holder.movieTitle.setText(titles[position]);
-            holder.movieImage.setImageDrawable(images[position]);
+            final Movie movie = movies.get(position);
+            holder.cardView.setBackgroundColor(movie.getColor());
+            holder.movieTitle.setText(movie.getTitle());
+            holder.movieImage.setImageDrawable(activity.getResources().getDrawable(movie.getImgId()));
 
             holder.cardView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -111,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
                             .makeSceneTransitionAnimation(activity, holder.movieTitle, "movie_title");
 
                     Intent intent = new Intent(activity, MovieActivity.class);
-                    intent.putExtra(MovieActivity.MOVIE_TITLE_KEY, titles[position]);
+                    intent.putExtra(MovieActivity.MOVIE_TITLE_KEY, movie.getTitle());
 
                     // start the new activity
                     activity.startActivity(intent, options.toBundle());
@@ -121,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public int getItemCount() {
-            return titles.length;
+            return movies.size();
         }
     }
 
